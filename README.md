@@ -8,6 +8,10 @@
 
 An enterprise-grade, in-cluster Kubernetes security reference architecture enforcing **cryptographic supply chain admission control** (Kyverno + Sigstore Cosign), **Pod Security Standards (Restricted)**, and **kernel-level runtime anomaly detection** via eBPF (Cilium Tetragon).
 
+<p align="center">
+  <img src="architecture-diagram.jpg" alt="Kubernetes Zero-Trust Admission Shield & eBPF Runtime Architecture" width="100%" />
+</p>
+
 ---
 
 ## 🏛️ System Architecture
@@ -155,3 +159,4 @@ To cleanly destroy the sandbox cluster and reclaim resources:
 
 ## 📜 License
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+
