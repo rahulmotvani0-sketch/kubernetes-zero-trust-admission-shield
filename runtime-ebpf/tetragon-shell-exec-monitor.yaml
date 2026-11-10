@@ -1,0 +1,28 @@
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: block-shell-execution-in-containers
+  namespace: kube-system
+  annotations:
+    description: "eBPF kernel-level runtime monitor: alerts on or terminates unauthorized shells (/bin/sh, /bin/bash) inside production containers."
+spec:
+  kprobes:
+    - call: "sys_execve"
+      syscall: true
+      args:
+        - index: 0
+          type: "string"
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: "Prefix"
+              values:
+                - "/bin/sh"
+                - "/bin/bash"
+                - "/usr/bin/bash"
+                - "/usr/bin/sh"
+          matchNamespaces:
+            - "production"
+          matchActions:
+            - action: Sigkill
+            - action: Post

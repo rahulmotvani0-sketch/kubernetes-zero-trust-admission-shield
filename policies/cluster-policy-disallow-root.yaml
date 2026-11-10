@@ -1,0 +1,70 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-root-and-privileged
+  annotations:
+    policies.kyverno.io/title: Disallow Root User & Privileged Execution
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Containers running as root or with elevated privileges pose a severe
+      container breakout threat. This policy enforces non-root execution,
+      drops all default Linux capabilities, and requires a read-only root filesystem.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - production
+                - default
+      validate:
+        message: "Running as root is strictly prohibited. Set 'securityContext.runAsNonRoot: true' and a non-zero 'runAsUser'."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - =(securityContext):
+                  =(runAsNonRoot): true
+
+    - name: drop-all-capabilities
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - production
+                - default
+      validate:
+        message: "All Linux capabilities must be dropped. Specify 'securityContext.capabilities.drop: [ALL]'."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  capabilities:
+                    drop:
+                      - ALL
+
+    - name: require-read-only-rootfs
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - production
+      validate:
+        message: "Containers in 'production' namespace must use a read-only root filesystem. Set 'securityContext.readOnlyRootFilesystem: true'."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true

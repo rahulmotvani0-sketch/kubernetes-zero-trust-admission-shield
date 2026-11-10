@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-pod-host-pid
+  namespace: production
+  labels:
+    app: attack-simulation
+spec:
+  hostPID: true
+  hostNetwork: true
+  containers:
+    - name: breakout-attacker
+      image: alpine:latest
+      command: ["sleep", "3600"]
+      securityContext:
+        privileged: true

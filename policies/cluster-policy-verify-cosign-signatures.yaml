@@ -1,0 +1,39 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-image-cosign-signature
+  annotations:
+    policies.kyverno.io/title: Verify Cosign Keyless Image Signature & SBOM
+    policies.kyverno.io/category: Software Supply Chain Security
+    policies.kyverno.io/severity: critical
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Verifies that container images deployed to the cluster carry a cryptographic
+      signature signed by an approved Sigstore Cosign OIDC identity and verified
+      against the Rekor transparency log. Blocks unauthenticated images.
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-trusted-issuer-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - production
+      verifyImages:
+        - imageReferences:
+            - "ghcr.io/rahulmotvani0-sketch/*"
+            - "docker.io/rahulprod/*"
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: "https://token.actions.githubusercontent.com"
+                    subject: "https://github.com/rahulmotvani0-sketch/*"
+                    rekor:
+                      url: "https://rekor.sigstore.dev"
+          mutateDigest: true
+          verifyDigest: true
+          required: true
